@@ -1,8 +1,6 @@
 package com.example.ejb;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import jakarta.persistence.EntityManager;
@@ -80,10 +78,19 @@ class BeneficioEjbServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenAmountIsInvalid() {
+    void shouldThrowExceptionWhenAmountIsNull() {
         assertThrows(IllegalArgumentException.class, () -> service.transfer(1L, 2L, null));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAmountIsZero() {
         assertThrows(IllegalArgumentException.class, () -> service.transfer(1L, 2L, BigDecimal.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> service.transfer(1L, 2L, new BigDecimal("-10.00")));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAmountIsNegative() {
+        BigDecimal negativeAmount = new BigDecimal("-10.00");
+        assertThrows(IllegalArgumentException.class, () -> service.transfer(1L, 2L, negativeAmount));
     }
 
     @Test
@@ -106,7 +113,10 @@ class BeneficioEjbServiceTest {
         when(em.find(Beneficio.class, 2L, LockModeType.PESSIMISTIC_WRITE)).thenReturn(to);
 
         assertThrows(IllegalStateException.class, () -> service.transfer(1L, 2L, BigDecimal.TEN));
-        
+    }
+
+    @Test
+    void shouldThrowExceptionWhenReceiverBeneficioIsInactive() {
         from.setAtivo(true);
         to.setAtivo(false);
         when(em.find(Beneficio.class, 1L, LockModeType.PESSIMISTIC_WRITE)).thenReturn(from);
@@ -120,6 +130,7 @@ class BeneficioEjbServiceTest {
         when(em.find(Beneficio.class, 1L, LockModeType.PESSIMISTIC_WRITE)).thenReturn(from);
         when(em.find(Beneficio.class, 2L, LockModeType.PESSIMISTIC_WRITE)).thenReturn(to);
 
-        assertThrows(IllegalStateException.class, () -> service.transfer(1L, 2L, new BigDecimal("2000.00")));
+        BigDecimal insufficientAmount = new BigDecimal("2000.00");
+        assertThrows(IllegalStateException.class, () -> service.transfer(1L, 2L, insufficientAmount));
     }
 }

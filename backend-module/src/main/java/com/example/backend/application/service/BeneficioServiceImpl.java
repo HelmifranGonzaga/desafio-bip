@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BeneficioServiceImpl implements BeneficioUseCase {
 
+    private static final String BENEFICIO_NAO_ENCONTRADO = "Benefício não encontrado: ";
+
     private final BeneficioRepositoryPort repositoryPort;
     private final BeneficioTransferPort transferPort;
 
@@ -31,7 +33,7 @@ public class BeneficioServiceImpl implements BeneficioUseCase {
     @Transactional(readOnly = true)
     public Beneficio getById(Long id) {
         return repositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Benefício não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(BENEFICIO_NAO_ENCONTRADO + id));
     }
 
     @Override
@@ -43,7 +45,8 @@ public class BeneficioServiceImpl implements BeneficioUseCase {
     @Override
     @Transactional
     public Beneficio update(Long id, Beneficio beneficio) {
-        Beneficio existing = getById(id);
+        Beneficio existing = repositoryPort.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(BENEFICIO_NAO_ENCONTRADO + id));
         existing.setNome(beneficio.getNome());
         existing.setDescricao(beneficio.getDescricao());
         existing.setValor(beneficio.getValor());
@@ -54,7 +57,8 @@ public class BeneficioServiceImpl implements BeneficioUseCase {
     @Override
     @Transactional
     public void delete(Long id) {
-        Beneficio existing = getById(id);
+        Beneficio existing = repositoryPort.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(BENEFICIO_NAO_ENCONTRADO + id));
         repositoryPort.delete(existing);
     }
 
